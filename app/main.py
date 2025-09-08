@@ -6,8 +6,10 @@ from fastapi.templating import Jinja2Templates
 from PIL import Image
 import pytesseract
 
-# This line is crucial for finding the Tesseract executable on Windows
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Remove the Windows-specific path for Render deployment. 
+# pytesseract will automatically find the executable on Render's Linux server
+# because tesseract-ocr is installed via apt-get.
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 from .models.schemas import MarksheetResult
 from .services.llm_service import extract_data_with_llm
@@ -37,7 +39,7 @@ async def extract_marksheet_data(file: UploadFile = File(...)):
             img = Image.open(io.BytesIO(image_data))
             
             img = resize_image(img)
-            img = preprocess_image(img) # Apply image preprocessing
+            img = preprocess_image(img)
             
             raw_text = pytesseract.image_to_string(img)
             img.close()
@@ -51,7 +53,7 @@ async def extract_marksheet_data(file: UploadFile = File(...)):
                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                 
                 img = resize_image(img)
-                img = preprocess_image(img) # Apply image preprocessing
+                img = preprocess_image(img)
                 
                 raw_text += pytesseract.image_to_string(img) + "\n\n"
                 img.close()
