@@ -1,17 +1,19 @@
 import io
-import fitz  # PyMuPDF
+import fitz # PyMuPDF
 from fastapi import FastAPI, UploadFile, HTTPException, status, File, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from PIL import Image
 import pytesseract
 
-# ✅ Explicitly tell pytesseract where Tesseract is installed on Render
-pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
+# Remove the Windows-specific path for Render deployment. 
+# pytesseract will automatically find the executable on Render's Linux server
+# because tesseract-ocr is installed via apt-get.
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-from models.schemas import MarksheetResult
-from services.llm_service import extract_data_with_llm
-from utils.image_processor import resize_image, preprocess_image
+from .models.schemas import MarksheetResult
+from .services.llm_service import extract_data_with_llm
+from .utils.image_processor import resize_image, preprocess_image
 
 app = FastAPI(title="Marksheet Extraction API")
 
@@ -63,7 +65,7 @@ async def extract_marksheet_data(file: UploadFile = File(...)):
                 detail="Unsupported file format. Please upload a JPG, PNG, or PDF."
             )
         
-        # Debugging logs
+        # Add this print statement for debugging purposes
         print("--- Raw Text from OCR ---")
         print(raw_text)
         print("-------------------------")
@@ -84,8 +86,6 @@ async def extract_marksheet_data(file: UploadFile = File(...)):
         return MarksheetResult.model_validate(extracted_json)
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         print(f"An unexpected error occurred: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
