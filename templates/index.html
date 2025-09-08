@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marksheet Extractor</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #eef1f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+        p {
+            text-align: center;
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        input[type="file"] {
+            border: 1px solid #ccc;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #155aab;
+        }
+        #output {
+            margin-top: 30px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 250px;
+            font-family: monospace;
+            overflow-x: auto;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1a73e8;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Marksheet Extractor</h1>
+        <p>Upload a marksheet (JPG, PNG, or PDF) to extract data and view the JSON output.</p>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="marksheetFile" name="file" accept=".jpg, .jpeg, .png, .pdf" required>
+            <button type="submit">Extract Data</button>
+        </form>
+        <div class="loader" id="loader"></div>
+        <div id="output">
+            JSON Output will appear here...
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('marksheetFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const outputDiv = document.getElementById('output');
+            const loaderDiv = document.getElementById('loader');
+
+            outputDiv.textContent = ''; // Clear previous output
+            loaderDiv.style.display = 'block'; // Show loader
+
+            try {
+                const apiUrl = '/extract/';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                loaderDiv.style.display = 'none'; // Hide loader
+                const data = await response.json();
+                
+                if (response.ok) {
+                    outputDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    outputDiv.textContent = `Error: ${JSON.stringify(data, null, 2)}`;
+                }
+
+            } catch (error) {
+                loaderDiv.style.display = 'none'; // Hide loader
+                outputDiv.textContent = `An unexpected error occurred: ${error.message}`;
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
