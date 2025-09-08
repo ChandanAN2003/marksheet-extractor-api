@@ -1,14 +1,20 @@
-# Use a base Python image
+# Use a slim, stable Python image to reduce size
 FROM python:3.11-slim
 
-# Install system dependencies for Tesseract
-RUN apt-get update && apt-get install -y tesseract-ocr && rm -rf /var/lib/apt/lists/*
+# Install Tesseract OCR and its dependencies
+# Use a multi-stage command to ensure the package list is up to date and clean
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    libleptonica-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
+# Set the working directory inside the container
 WORKDIR /app
 
 # Copy your requirements.txt and install Python dependencies
-COPY requirements.txt requirements.txt
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your application code
